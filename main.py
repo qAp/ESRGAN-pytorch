@@ -15,7 +15,9 @@ def main(config):
 
     print(f"ESRGAN start")
 
-    data_loader = get_loader(config.image_size, config.scale_factor, config.batch_size, config.sample_batch_size)
+    data_loader = get_loader(config.image_size, config.scale_factor,
+                             config.batch_size, config.sample_batch_size,
+                             config.input_dir)
     trainer = Trainer(config, data_loader)
     trainer.train()
 

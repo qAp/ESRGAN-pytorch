@@ -6,19 +6,20 @@ from random import random
 
 
 class Datasets(Dataset):
-    def __init__(self, image_size, scale):
+    def __init__(self, image_size, scale, input_dir='datasets'):
         self.image_size = image_size
         self.scale = scale
+        self.input_dir = input_dir
 
-        if not os.path.exists('datasets'):
-            raise Exception(f"[!] dataset is not exited")
+        if not os.path.exists(input_dir):
+            raise Exception(f"[!] {input_dir} is not exited")
 
-        self.image_file_name = sorted(os.listdir(os.path.join('datasets', 'hr')))
+        self.image_file_name = sorted(os.listdir(os.path.join(input_dir, 'hr')))
 
     def __getitem__(self, item):
         file_name = self.image_file_name[item]
-        high_resolution = Image.open(os.path.join('datasets', 'hr', file_name)).convert('RGB')
-        low_resolution = Image.open(os.path.join('datasets', 'lr', file_name)).convert('RGB')
+        high_resolution = Image.open(os.path.join(self.input_dir, 'hr', file_name)).convert('RGB')
+        low_resolution = Image.open(os.path.join(self.input_dir, 'lr', file_name)).convert('RGB')
 
         if random() > 0.5:
             high_resolution = TF.vflip(high_resolution)
