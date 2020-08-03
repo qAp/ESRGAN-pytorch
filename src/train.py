@@ -140,8 +140,15 @@ class Trainer:
         discriminator = glob(os.path.join(self.checkpoint_dir, f'discriminator_{self.epoch - 1}.pth'))
 
         if not generator:
-            print(f"[!] No checkpoint in epoch {self.epoch - 1}")
+            print(f"[!] No generator checkpoint in epoch {self.epoch - 1}")
             return
+        else:
+            print(f"[*] Loading generator parameters from {generator[0]}.")
+            self.generator.load_state_dict(torch.load(generator[0]))
 
-        self.generator.load_state_dict(torch.load(generator[0]))
-        self.discriminator.load_state_dict(torch.load(discriminator[0]))
+        if not discriminator:
+            print(f"[!] No discriminator checkpoint in epoch {self.epoch - 1}")
+            return
+        else:
+            print(f"[*] Loading discriminator parameters from {discriminator[0]}")
+            self.discriminator.load_state_dict(torch.load(discriminator[0]))
