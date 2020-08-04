@@ -39,11 +39,14 @@ parser.add_argument('--g_perceptual_loss_factor', type=float, default=1, help='p
 parser.add_argument('--g_adversarial_loss_factor', type=float, default=5e-3, help='adversarial loss factor when '
                                                                                   'training generator oriented')
 
-parser.add_argument('--is_perceptual_oriented', type=bool, default=True, help='')
+def boolean_string(s):
+    if s not in {'True', 'False'}:
+        raise ValueError('Not a valid boolean string.')
+    return s=='True'
+parser.add_argument('--is_perceptual_oriented', type=boolean_string, default=True, help='')
 
 url = ['http://data.vision.ee.ethz.ch/cvl/DIV2K/DIV2K_train_HR.zip',
-       'http://cv.snu.ac.kr/research/EDSR/Flickr2K.tar'
-       ]
+       'http://cv.snu.ac.kr/research/EDSR/Flickr2K.tar']
 
 parser.add_argument('--dataset_url', type=list, default=url, help='the url of DIV2K dataset for super resolution')
 def get_config():
