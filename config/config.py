@@ -1,7 +1,7 @@
 import argparse
 
 parser = argparse.ArgumentParser()
-
+parser.add_argument('--input_dir', default='datasets', help='folder that has hr and lr folders which have input images')
 parser.add_argument('--image_size', type=int, default=128, help='the height / width of the input image to network')
 parser.add_argument('--batch_size', type=int, default=16, help='batch size')
 parser.add_argument('--sample_batch_size', type=int, default=1, help='sample batch size')
