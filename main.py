@@ -2,7 +2,7 @@ from src.train import Trainer
 from dataloader.dataloader import get_loader
 import os
 from config.config import get_config
-
+import pprint
 
 def main(config):
     # make directory not existed
@@ -24,4 +24,5 @@ def main(config):
 
 if __name__ == "__main__":
     config = get_config()
+    pprint.pprint(config)
     main(config)
