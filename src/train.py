@@ -3,11 +3,11 @@ from glob import glob
 import torch, torch.nn as nn
 from torch.optim.adam import Adam
 from torchvision.utils import save_image
-from ..loss.loss import PerceptualLoss
-from ..config.config import parse_args
-from ..model.ESRGAN import ESRGAN
-from ..model.Discriminator import Discriminator
-
+from loss.loss import PerceptualLoss
+from config.config import parse_args
+from model.ESRGAN import ESRGAN
+from model.Discriminator import Discriminator
+from dataloader.dataloader import get_loader
 
 
 class Trainer:
@@ -164,6 +164,7 @@ def train(gpu, args):
         os.makedirs(args.sample_dir)
 
     print(f"ESRGAN start")
+    print(args)
 
     data_loader = get_loader(args.image_size, args.scale_factor,
                              args.batch_size, args.sample_batch_size,

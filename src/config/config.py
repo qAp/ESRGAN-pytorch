@@ -8,6 +8,12 @@ def boolean_string(s):
 
 def parse_args():
     parser = argparse.ArgumentParser()
+    parser.add_argument('-n', '--nodes', default=1, type=int, metavar='N',
+                        help='number of data loading workers (default: 4)')
+    parser.add_argument('-g', '--gpus', default=1, type=int,
+                        help='number of gpus per node')
+    parser.add_argument('-nr', '--nr', default=0, type=int,
+                        help='ranking within the nodes')
     parser.add_argument('--input_dir', default='datasets',
                         help=('folder that has hr and lr folders which have '
                               'input images'))
