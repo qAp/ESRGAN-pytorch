@@ -1,12 +1,13 @@
-import torch
-from torch.optim.adam import Adam
-from model.ESRGAN import ESRGAN
-from model.Discriminator import Discriminator
 import os
 from glob import glob
-import torch.nn as nn
+import torch, torch.nn as nn
+from torch.optim.adam import Adam
 from torchvision.utils import save_image
-from loss.loss import PerceptualLoss
+from ..loss.loss import PerceptualLoss
+from ..config.config import parse_args
+from ..model.ESRGAN import ESRGAN
+from ..model.Discriminator import Discriminator
+
 
 
 class Trainer:
@@ -152,3 +153,32 @@ class Trainer:
         else:
             print(f"[*] Loading discriminator parameters from {discriminator[0]}")
             self.discriminator.load_state_dict(torch.load(discriminator[0]))
+
+
+def train(gpu, args):
+    if args.checkpoint_dir is None:
+        args.checkpoint_dir = 'checkpoints'
+    if not os.path.exists(args.checkpoint_dir): 
+        os.makedirs(args.checkpoint_dir)
+    if not os.path.exists(args.sample_dir):
+        os.makedirs(args.sample_dir)
+
+    print(f"ESRGAN start")
+
+    data_loader = get_loader(args.image_size, args.scale_factor,
+                             args.batch_size, args.sample_batch_size,
+                             args.input_dir)
+    trainer = Trainer(args, data_loader)
+    trainer.train()
+            
+
+def main():
+    args = parse_args()
+    args.world_size = args.gpus * args.nodes
+    os.environ['MASTER_ADDR'] = '172.31.29.213'
+    os.environ['MASTER_PORT'] = '8889'
+    train(0, args)
+#    mp.spawn(train, nprocs=args.gpus, args=(args,))
+
+if __name__=='__main__':
+    main()

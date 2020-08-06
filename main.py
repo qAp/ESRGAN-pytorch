@@ -4,25 +4,29 @@ import os
 from config.config import get_config
 import pprint
 
-def main(config):
+
+
+
+def main():
+    args = get_config()
     # make directory not existed
-    if config.checkpoint_dir is None:
-        config.checkpoint_dir = 'checkpoints'
-    if not os.path.exists(config.checkpoint_dir):
-        os.makedirs(config.checkpoint_dir)
-    if not os.path.exists(config.sample_dir):
-        os.makedirs(config.sample_dir)
+    if args.checkpoint_dir is None:
+        args.checkpoint_dir = 'checkpoints'
+    if not os.path.exists(args.checkpoint_dir):
+        os.makedirs(args.checkpoint_dir)
+    if not os.path.exists(args.sample_dir):
+        os.makedirs(args.sample_dir)
 
     print(f"ESRGAN start")
 
-    data_loader = get_loader(config.image_size, config.scale_factor,
-                             config.batch_size, config.sample_batch_size,
-                             config.input_dir)
-    trainer = Trainer(config, data_loader)
+    data_loader = get_loader(args.image_size, args.scale_factor,
+                             args.batch_size, args.sample_batch_size,
+                             args.input_dir)
+    trainer = Trainer(args, data_loader)
     trainer.train()
 
 
 if __name__ == "__main__":
-    config = get_config()
-    pprint.pprint(config)
-    main(config)
+
+    pprint.pprint(args)
+    main(args)
