@@ -86,7 +86,9 @@ class Trainer:
                                  perceptual_loss * self.perceptual_loss_factor + \
                                  content_loss * self.content_loss_factor
 
-                generator_loss.backward()
+                with apex.amp.scale_loss(generator_loss,
+                                         self.optimizer_generator) as scaled_loss:
+                    scaled_loss.backward()
                 self.optimizer_generator.step()
 
                 ##########################
@@ -104,7 +106,9 @@ class Trainer:
                 adversarial_loss_fr = adversarial_criterion(discriminator_fr, fake_labels)
                 discriminator_loss = (adversarial_loss_fr + adversarial_loss_rf) / 2
 
-                discriminator_loss.backward()
+                with apex.amp.scale_loss(discriminator_loss,
+                                         self.optimizer_discriminator) as scaled_loss:
+                    scaled_loss.backward()
                 self.optimizer_discriminator.step()
 
                 self.lr_scheduler_generator.step()
