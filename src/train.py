@@ -75,19 +75,23 @@ class Trainer:
                 discriminator_rf = score_real - score_fake.mean()
                 discriminator_fr = score_fake - score_real.mean()
 
-                adversarial_loss_rf = adversarial_criterion(discriminator_rf, fake_labels)
-                adversarial_loss_fr = adversarial_criterion(discriminator_fr, real_labels)
+                adversarial_loss_rf = adversarial_criterion(
+                    discriminator_rf, fake_labels)
+                adversarial_loss_fr = adversarial_criterion(
+                    discriminator_fr, real_labels)
                 adversarial_loss = (adversarial_loss_fr + adversarial_loss_rf) / 2
 
-                perceptual_loss = perception_criterion(high_resolution, fake_high_resolution)
-                content_loss = content_criterion(fake_high_resolution, high_resolution)
+                perceptual_loss = perception_criterion(
+                    high_resolution, fake_high_resolution)
+                content_loss = content_criterion(
+                    fake_high_resolution, high_resolution)
 
-                generator_loss = adversarial_loss * self.adversarial_loss_factor + \
-                                 perceptual_loss * self.perceptual_loss_factor + \
-                                 content_loss * self.content_loss_factor
+                generator_loss = (adversarial_loss * self.adversarial_loss_factor + 
+                                  perceptual_loss * self.perceptual_loss_factor + 
+                                  content_loss * self.content_loss_factor)
 
-                with apex.amp.scale_loss(generator_loss,
-                                         self.optimizer_generator) as scaled_loss:
+                with apex.amp.scale_loss(
+                        generator_loss, self.optimizer_generator) as scaled_loss:
                     scaled_loss.backward()
                 self.optimizer_generator.step()
 
@@ -102,8 +106,10 @@ class Trainer:
                 discriminator_rf = score_real - score_fake.mean()
                 discriminator_fr = score_fake - score_real.mean()
 
-                adversarial_loss_rf = adversarial_criterion(discriminator_rf, real_labels)
-                adversarial_loss_fr = adversarial_criterion(discriminator_fr, fake_labels)
+                adversarial_loss_rf = adversarial_criterion(
+                    discriminator_rf, real_labels)
+                adversarial_loss_fr = adversarial_criterion(
+                    discriminator_fr, fake_labels)
                 discriminator_loss = (adversarial_loss_fr + adversarial_loss_rf) / 2
 
                 with apex.amp.scale_loss(discriminator_loss,
@@ -113,9 +119,12 @@ class Trainer:
 
                 self.lr_scheduler_generator.step()
                 self.lr_scheduler_discriminator.step()
+                
                 if step % 1000 == 0:
-                    print(f"[Epoch {epoch}/{self.num_epoch}] [Batch {step}/{total_step}] "
-                          f"[D loss {discriminator_loss.item():.4f}] [G loss {generator_loss.item():.4f}] "
+                    print(f"[Epoch {epoch}/{self.num_epoch}] "
+                          f"[Batch {step}/{total_step}] "
+                          f"[D loss {discriminator_loss.item():.4f}] "
+                          f"[G loss {generator_loss.item():.4f}] "
                           f"[adversarial loss {adversarial_loss.item() * self.adversarial_loss_factor:.4f}]"
                           f"[perceptual loss {perceptual_loss.item() * self.perceptual_loss_factor:.4f}]"
                           f"[content loss {content_loss.item() * self.content_loss_factor:.4f}]"
