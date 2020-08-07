@@ -3,6 +3,7 @@ from glob import glob
 import torch, torch.nn as nn
 from torch.optim.adam import Adam
 from torchvision.utils import save_image
+import torch.multiprocessing as mp
 from loss.loss import PerceptualLoss
 from config.config import parse_args
 from model.ESRGAN import ESRGAN
@@ -156,6 +157,7 @@ class Trainer:
 
 
 def train(gpu, args):
+    print('Start of train():', gpu)
     if args.checkpoint_dir is None:
         args.checkpoint_dir = 'checkpoints'
     if not os.path.exists(args.checkpoint_dir): 
@@ -178,8 +180,7 @@ def main():
     args.world_size = args.gpus * args.nodes
     os.environ['MASTER_ADDR'] = '172.31.29.213'
     os.environ['MASTER_PORT'] = '8889'
-    train(0, args)
-#    mp.spawn(train, nprocs=args.gpus, args=(args,))
+    mp.spawn(train, nprocs=args.gpus, args=(args,))
 
 if __name__=='__main__':
     main()
