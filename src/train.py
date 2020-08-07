@@ -40,18 +40,10 @@ class Trainer:
 
         self.build_model()
         self.build_optimizer(args)
-        self.generator = apex.parallel.DistributedDataParallel(
-            self.generator, delay_allreduce=True)
-        self.discriminator = apex.parallel.DistributedDataParallel(
-            self.discriminator, delay_allreduce=True)        
-
-        self.lr_scheduler_generator = torch.optim.lr_scheduler.StepLR(
-            self.optimizer_generator, self.decay_batch_size)
-        self.lr_scheduler_discriminator = torch.optim.lr_scheduler.StepLR(
-            self.optimizer_discriminator, self.decay_batch_size)
-        
+        self.initialize_model_opt_fp16()
+        self.parallelize_model()
+        self.build_scheduler()
         self.load_model()
-
 
     def train(self):
         total_step = len(self.data_loader)
@@ -143,6 +135,24 @@ class Trainer:
             self.discriminator.parameters(), lr=self.lr,
             betas=(args.b1, args.b2), weight_decay=args.weight_decay)
 
+    def initialize_model_opt_fp16(self):
+        self.generator, self.optimizer_generator = apex.amp.initialize(
+            self.generator, self.optimizer_generator, opt_level='O2')
+        self.discriminator, self.optimizer_discriminator = apex.amp.initialize(
+            self.discriminator, self.optimizer_discriminator, opt_level='O2')
+
+    def parallelize_model(self):
+        self.generator = apex.parallel.DistributedDataParallel(
+            self.generator, delay_allreduce=True)
+        self.discriminator = apex.parallel.DistributedDataParallel(
+            self.discriminator, delay_allreduce=True)        
+
+    def build_scheduler(self):
+        self.lr_scheduler_generator = torch.optim.lr_scheduler.StepLR(
+            self.optimizer_generator, self.decay_batch_size)
+        self.lr_scheduler_discriminator = torch.optim.lr_scheduler.StepLR(
+            self.optimizer_discriminator, self.decay_batch_size)
+        
     def load_model(self):
         print(f"[*] Load model from {self.checkpoint_dir}")
         if not os.path.exists(self.checkpoint_dir):
