@@ -48,9 +48,9 @@ class Trainer:
 
     def train(self):
         total_step = len(self.data_loader)
-        adversarial_criterion = nn.BCEWithLogitsLoss().to(self.device)
-        content_criterion = nn.L1Loss().to(self.device)
-        perception_criterion = PerceptualLoss().to(self.device)
+        adversarial_criterion = nn.BCEWithLogitsLoss().cuda()
+        content_criterion = nn.L1Loss().cuda()
+        perception_criterion = PerceptualLoss().cuda()
         self.generator.train()
         self.discriminator.train()
 
@@ -59,11 +59,11 @@ class Trainer:
                 os.makedirs(os.path.join(self.sample_dir, str(epoch)))
 
             for step, image in enumerate(self.data_loader):
-                low_resolution = image['lr'].to(self.device)
-                high_resolution = image['hr'].to(self.device)
+                low_resolution = image['lr'].cuda()
+                high_resolution = image['hr'].cuda()
 
-                real_labels = torch.ones((high_resolution.size(0), 1)).to(self.device)
-                fake_labels = torch.zeros((high_resolution.size(0), 1)).to(self.device)
+                real_labels = torch.ones((high_resolution.size(0), 1)).cuda()
+                fake_labels = torch.zeros((high_resolution.size(0), 1)).cuda()
 
                 ##########################
                 #   training generator   #
@@ -125,8 +125,8 @@ class Trainer:
             torch.save(self.discriminator.state_dict(), os.path.join(self.checkpoint_dir, f"discriminator_{epoch}.pth"))
 
     def build_model(self):
-        self.generator = ESRGAN(3, 3, 64, scale_factor=self.scale_factor).to(self.device)
-        self.discriminator = Discriminator().to(self.device)
+        self.generator = ESRGAN(3, 3, 64, scale_factor=self.scale_factor).cuda()
+        self.discriminator = Discriminator().cuda()
         self.load_model()
 
     def load_model(self):
@@ -163,6 +163,7 @@ def train(gpu, args):
                             world_size=args.world_size, rank=rank)
 
     torch.manual_seed(0)
+    torch.cuda.set_device(gpu)
     
     if args.checkpoint_dir is None:
         args.checkpoint_dir = 'checkpoints'
