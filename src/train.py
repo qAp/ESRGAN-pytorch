@@ -184,21 +184,21 @@ class Trainer:
                 paths_checkpoint[0],
                 map_location=lambda storage, loc: storage.cuda())
             if checkpoint['g_state_dict'] is not None:
-                print(f"[!] No generator checkpoint in epoch {self.epoch - 1}")
-            else:
                 print(f'[*] Loading generator parameters from {paths_checkpoint[0]}')
-                self.generator.load_state_dict(checkpoint['g_state_dict'])
-            if checkpoint['d_state_dict']:
-                print(f"[!] No discriminator checkpoint in epoch {self.epoch - 1}")
+                self.generator.load_state_dict(checkpoint['g_state_dict'])              
             else:
+                print(f"[!] No generator checkpoint in epoch {self.epoch - 1}")
+            if checkpoint['d_state_dict'] is not None:
                 print(('[*] Loading discriminator parameters ' 
                        f'from {paths_checkpoint[0]}'))
                 self.discriminator.load_state_dict(checkpoint['d_state_dict'])
+            else:
+                print(f"[!] No discriminator checkpoint in epoch {self.epoch - 1}")
             if checkpoint['amp'] is not None:
                 apex.amp.load_state_dict(checkpoint['amp'])
-
                 
 
+                
 def train(gpu, args):
     print('Start of train():', gpu)
     args.rank = args.nr * args.gpus + gpu
