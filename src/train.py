@@ -14,6 +14,7 @@ from dataloader.dataloader import get_loader
 
 class Trainer:
     def __init__(self, args, data_loader):
+        self.args = args
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.num_epoch = args.num_epoch
         self.epoch = args.epoch
@@ -133,8 +134,15 @@ class Trainer:
                         result = torch.cat((high_resolution, fake_high_resolution), 2)
                         save_image(result, os.path.join(self.sample_dir, str(epoch), f"SR_{step}.png"))
 
-            torch.save(self.generator.state_dict(), os.path.join(self.checkpoint_dir, f"generator_{epoch}.pth"))
-            torch.save(self.discriminator.state_dict(), os.path.join(self.checkpoint_dir, f"discriminator_{epoch}.pth"))
+            torch.save(
+                {'epoch':epoch,
+                 'g_state_dict':self.generator.state_dict(),
+                 'd_state_dict':self.discriminator.state_dict(),
+                 'opt_g_state_dict':self.optimizer_generator.state_dict(),
+                 'opt_d_state_dict':self.optimizer_discriminator.state_dict(),
+                 'amp':apex.amp.state_dict(),
+                 'args':self.args},
+                os.path.join(self.checkpoint_dir, f'checkpoint_{epoch}.pth'))
 
     def build_model(self):
         self.generator = ESRGAN(3, 3, 64, scale_factor=self.scale_factor).cuda()
@@ -167,31 +175,29 @@ class Trainer:
             self.optimizer_discriminator, self.decay_batch_size)
         
     def load_model(self):
-        print(f"[*] Load model from {self.checkpoint_dir}")
-        if not os.path.exists(self.checkpoint_dir):
-            self.makedirs = os.makedirs(self.checkpoint_dir)
-
-        if not os.listdir(self.checkpoint_dir):
-            print(f"[!] No checkpoint in {self.checkpoint_dir}")
-            return
-
-        generator = glob(os.path.join(self.checkpoint_dir, f'generator_{self.epoch - 1}.pth'))
-        discriminator = glob(os.path.join(self.checkpoint_dir, f'discriminator_{self.epoch - 1}.pth'))
-
-        if not generator:
-            print(f"[!] No generator checkpoint in epoch {self.epoch - 1}")
-            return
+        paths_checkpoint = glob(
+            os.path.join(self.checkpoint_dir, f'checkpoint_{self.epoch-1}.pth'))
+        if not paths_checkpoint:
+            print(f'[!] No checkpoint in epoch {self.epoch - 1}')
         else:
-            print(f"[*] Loading generator parameters from {generator[0]}.")
-            self.generator.load_state_dict(torch.load(generator[0]))
+            checkpoint = torch.load(
+                paths_checkpoint[0],
+                map_location=lambda storage, loc: storage.cuda())
+            if checkpoint['g_state_dict'] is not None:
+                print(f"[!] No generator checkpoint in epoch {self.epoch - 1}")
+            else:
+                print(f'[*] Loading generator parameters from {paths_checkpoint[0]}')
+                self.generator.load_state_dict(checkpoint['g_state_dict'])
+            if checkpoint['d_state_dict']:
+                print(f"[!] No discriminator checkpoint in epoch {self.epoch - 1}")
+            else:
+                print(('[*] Loading discriminator parameters ' 
+                       f'from {paths_checkpoint[0]}'))
+                self.discriminator.load_state_dict(checkpoint['d_state_dict'])
+            if checkpoint['amp'] is not None:
+                apex.amp.load_state_dict(checkpoint['amp'])
 
-        if not discriminator:
-            print(f"[!] No discriminator checkpoint in epoch {self.epoch - 1}")
-            return
-        else:
-            print(f"[*] Loading discriminator parameters from {discriminator[0]}")
-            self.discriminator.load_state_dict(torch.load(discriminator[0]))
-
+                
 
 def train(gpu, args):
     print('Start of train():', gpu)
