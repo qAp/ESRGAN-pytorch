@@ -4,6 +4,8 @@ import torch, torch.nn as nn
 from torch.optim.adam import Adam
 from torchvision.utils import save_image
 import torch.multiprocessing as mp, torch.distributed as dist
+from apex.parallel import DistributedDataParallel as DDP
+from apex import amp
 from loss.loss import PerceptualLoss
 from config.config import parse_args
 from model.ESRGAN import ESRGAN
@@ -12,39 +14,42 @@ from dataloader.dataloader import get_loader
 
 
 class Trainer:
-    def __init__(self, config, data_loader):
+    def __init__(self, args, data_loader):
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        self.num_epoch = config.num_epoch
-        self.epoch = config.epoch
-        self.image_size = config.image_size
+        self.num_epoch = args.num_epoch
+        self.epoch = args.epoch
+        self.image_size = args.image_size
         self.data_loader = data_loader
-        self.checkpoint_dir = config.checkpoint_dir
-        self.batch_size = config.batch_size
-        self.sample_dir = config.sample_dir
-        self.nf = config.nf
-        self.scale_factor = config.scale_factor
+        self.checkpoint_dir = args.checkpoint_dir
+        self.batch_size = args.batch_size
+        self.sample_dir = args.sample_dir
+        self.nf = args.nf
+        self.scale_factor = args.scale_factor
 
-        if config.is_perceptual_oriented:
-            self.lr = config.p_lr
-            self.content_loss_factor = config.p_content_loss_factor
-            self.perceptual_loss_factor = config.p_perceptual_loss_factor
-            self.adversarial_loss_factor = config.p_adversarial_loss_factor
-            self.decay_batch_size = config.p_decay_batch_size
+        if args.is_perceptual_oriented:
+            self.lr = args.p_lr
+            self.content_loss_factor = args.p_content_loss_factor
+            self.perceptual_loss_factor = args.p_perceptual_loss_factor
+            self.adversarial_loss_factor = args.p_adversarial_loss_factor
+            self.decay_batch_size = args.p_decay_batch_size
         else:
-            self.lr = config.g_lr
-            self.content_loss_factor = config.g_content_loss_factor
-            self.perceptual_loss_factor = config.g_perceptual_loss_factor
-            self.adversarial_loss_factor = config.g_adversarial_loss_factor
-            self.decay_batch_size = config.g_decay_batch_size
+            self.lr = args.g_lr
+            self.content_loss_factor = args.g_content_loss_factor
+            self.perceptual_loss_factor = args.g_perceptual_loss_factor
+            self.adversarial_loss_factor = args.g_adversarial_loss_factor
+            self.decay_batch_size = args.g_decay_batch_size
 
         self.build_model()
-        self.optimizer_generator = Adam(self.generator.parameters(), lr=self.lr, betas=(config.b1, config.b2),
-                                        weight_decay=config.weight_decay)
-        self.optimizer_discriminator = Adam(self.discriminator.parameters(), lr=self.lr, betas=(config.b1, config.b2),
-                                            weight_decay=config.weight_decay)
-
-        self.lr_scheduler_generator = torch.optim.lr_scheduler.StepLR(self.optimizer_generator, self.decay_batch_size)
-        self.lr_scheduler_discriminator = torch.optim.lr_scheduler.StepLR(self.optimizer_discriminator, self.decay_batch_size)
+        self.optimizer_generator = Adam(
+            self.generator.parameters(), lr=self.lr,
+            betas=(args.b1, args.b2), weight_decay=args.weight_decay)
+        self.optimizer_discriminator = Adam(
+            self.discriminator.parameters(), lr=self.lr,
+            betas=(args.b1, args.b2), weight_decay=args.weight_decay)
+        self.lr_scheduler_generator = torch.optim.lr_scheduler.StepLR(
+            self.optimizer_generator, self.decay_batch_size)
+        self.lr_scheduler_discriminator = torch.optim.lr_scheduler.StepLR(
+            self.optimizer_discriminator, self.decay_batch_size)
 
     def train(self):
         total_step = len(self.data_loader)
