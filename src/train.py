@@ -4,8 +4,7 @@ import torch, torch.nn as nn
 from torch.optim.adam import Adam
 from torchvision.utils import save_image
 import torch.multiprocessing as mp, torch.distributed as dist
-from apex.parallel import DistributedDataParallel as DDP
-from apex import amp
+import apex
 from loss.loss import PerceptualLoss
 from config.config import parse_args
 from model.ESRGAN import ESRGAN
@@ -40,16 +39,19 @@ class Trainer:
             self.decay_batch_size = args.g_decay_batch_size
 
         self.build_model()
-        self.optimizer_generator = Adam(
-            self.generator.parameters(), lr=self.lr,
-            betas=(args.b1, args.b2), weight_decay=args.weight_decay)
-        self.optimizer_discriminator = Adam(
-            self.discriminator.parameters(), lr=self.lr,
-            betas=(args.b1, args.b2), weight_decay=args.weight_decay)
+        self.build_optimizer(args)
+        self.generator = apex.parallel.DistributedDataParallel(
+            self.generator, delay_allreduce=True)
+        self.discriminator = apex.parallel.DistributedDataParallel(
+            self.discriminator, delay_allreduce=True)        
+
         self.lr_scheduler_generator = torch.optim.lr_scheduler.StepLR(
             self.optimizer_generator, self.decay_batch_size)
         self.lr_scheduler_discriminator = torch.optim.lr_scheduler.StepLR(
             self.optimizer_discriminator, self.decay_batch_size)
+        
+        self.load_model()
+
 
     def train(self):
         total_step = len(self.data_loader)
@@ -132,7 +134,14 @@ class Trainer:
     def build_model(self):
         self.generator = ESRGAN(3, 3, 64, scale_factor=self.scale_factor).cuda()
         self.discriminator = Discriminator().cuda()
-        self.load_model()
+
+    def build_optimizer(self, args):
+        self.optimizer_generator = Adam(
+            self.generator.parameters(), lr=self.lr,
+            betas=(args.b1, args.b2), weight_decay=args.weight_decay)
+        self.optimizer_discriminator = Adam(
+            self.discriminator.parameters(), lr=self.lr,
+            betas=(args.b1, args.b2), weight_decay=args.weight_decay)
 
     def load_model(self):
         print(f"[*] Load model from {self.checkpoint_dir}")
