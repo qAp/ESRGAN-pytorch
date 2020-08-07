@@ -161,6 +161,8 @@ def train(gpu, args):
     rank = args.nr * args.gpus + gpu
     dist.init_process_group(backend='nccl', init_method='env://',
                             world_size=args.world_size, rank=rank)
+
+    torch.manual_seed(0)
     
     if args.checkpoint_dir is None:
         args.checkpoint_dir = 'checkpoints'
