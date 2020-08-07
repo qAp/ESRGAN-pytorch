@@ -3,9 +3,11 @@ from dataloader.datasets import Datasets
 import torch
 
 
-def get_loader(image_size, scale, batch_size, sample_batch_size,
-               input_dir='datasets'):
-    train_dataset = Datasets(image_size, scale, input_dir)
-
-    train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
+def get_loader(args):
+    train_dataset = Datasets(args.image_size, args.scale_factor, args.input_dir)
+    train_sampler = torch.utils.data.distributed.DistributedSampler(
+        train_dataset, num_replicas=args.world_size, rank=args.rank)
+    train_loader = torch.utils.data.DataLoader(
+        dataset=train_dataset,
+        batch_size=args.batch_size, shuffle=False, sampler=train_sampler)
     return train_loader

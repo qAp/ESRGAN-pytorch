@@ -172,9 +172,9 @@ class Trainer:
 
 def train(gpu, args):
     print('Start of train():', gpu)
-    rank = args.nr * args.gpus + gpu
+    args.rank = args.nr * args.gpus + gpu
     dist.init_process_group(backend='nccl', init_method='env://',
-                            world_size=args.world_size, rank=rank)
+                            world_size=args.world_size, rank=args.rank)
 
     torch.manual_seed(0)
     torch.cuda.set_device(gpu)
@@ -189,9 +189,7 @@ def train(gpu, args):
     print(f"ESRGAN start")
     print(args)
 
-    data_loader = get_loader(args.image_size, args.scale_factor,
-                             args.batch_size, args.sample_batch_size,
-                             args.input_dir)
+    data_loader = get_loader(args)
     trainer = Trainer(args, data_loader)
     trainer.train()
             
