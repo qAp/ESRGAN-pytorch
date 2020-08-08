@@ -44,7 +44,11 @@ class Trainer:
         self.build_optimizer(args)
         self.initialize_model_opt_fp16()
         self.parallelize_model()
+        self.history = {n:[] for n in ['adversarial_loss', 'discriminator_loss',
+                                       'perceptual_loss', 'content_loss',
+                                       'generator_loss']}
         if args.load: self.load_model(args)
+        # resume here
         self.build_scheduler()
         
     def train(self):
@@ -135,8 +139,14 @@ class Trainer:
                         result = torch.cat((high_resolution, fake_high_resolution), 2)
                         save_image(result, os.path.join(self.sample_dir, str(epoch), f"SR_{step}.png"))
 
+            history['adversarial_loss'].append(adversarial_loss.item())
+            history['discriminator_loss'].append(discriminator_loss.item())
+            history['perceptual_loss'].append(perceptual_loss.item())
+            history['content_loss'].append(content_loss.item())
+            history['generator_loss'].append(generator_loss.item())
+                        
             torch.save(
-                {'epoch':epoch,
+                {'epoch':epoch, 'history':history, 
                  'g_state_dict':self.generator.state_dict(),
                  'd_state_dict':self.discriminator.state_dict(),
                  'opt_g_state_dict':self.optimizer_generator.state_dict(),
