@@ -40,9 +40,8 @@ class Trainer:
                                        'generator_loss']}
         if args.load: self.load_model(args)
         if args.resume: self.resume(args)
-        self.build_scheduler()
-        
-        
+        self.build_scheduler(args)
+
     def train(self, args):
         total_step = len(self.data_loader)
         adversarial_criterion = nn.BCEWithLogitsLoss().cuda()
@@ -174,7 +173,7 @@ class Trainer:
         self.discriminator = apex.parallel.DistributedDataParallel(
             self.discriminator, delay_allreduce=True)        
 
-    def build_scheduler(self):
+    def build_scheduler(self, args):
         self.lr_scheduler_generator = torch.optim.lr_scheduler.StepLR(
             self.optimizer_generator, self.decay_batch_size,
             last_epoch=args.epoch if args.resume else -1)
