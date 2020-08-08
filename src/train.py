@@ -176,9 +176,11 @@ class Trainer:
 
     def build_scheduler(self):
         self.lr_scheduler_generator = torch.optim.lr_scheduler.StepLR(
-            self.optimizer_generator, self.decay_batch_size)
+            self.optimizer_generator, self.decay_batch_size,
+            last_epoch=args.epoch if args.resume else -1)
         self.lr_scheduler_discriminator = torch.optim.lr_scheduler.StepLR(
-            self.optimizer_discriminator, self.decay_batch_size)
+            self.optimizer_discriminator, self.decay_batch_size,
+            last_epoch=args.epoch if args.resume else -1)
         
     def load_model(self, args):
         path_to_load = Path(args.load)
