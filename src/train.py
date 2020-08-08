@@ -139,10 +139,13 @@ class Trainer:
                         result = torch.cat((high_resolution, fake_high_resolution), 2)
                         save_image(result, os.path.join(self.sample_dir, str(epoch), f"SR_{step}.png"))
 
-            self.history['adversarial_loss'].append(adversarial_loss.item())
+            self.history['adversarial_loss'].append(
+                adversarial_loss.item()*self.adversarial_loss_factor)
             self.history['discriminator_loss'].append(discriminator_loss.item())
-            self.history['perceptual_loss'].append(perceptual_loss.item())
-            self.history['content_loss'].append(content_loss.item())
+            self.history['perceptual_loss'].append(
+                perceptual_loss.item()*self.perceptual_loss_factor)
+            self.history['content_loss'].append(
+                content_loss.item()*self.content_loss_factor)
             self.history['generator_loss'].append(generator_loss.item())
                         
             torch.save(
