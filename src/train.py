@@ -220,7 +220,7 @@ class Trainer:
             if cpt['amp'] is not None:
                 apex.amp.load_state_dict(cpt['amp'])
         else:
-            print(f'[!] No checkpoint to resume from at {path_to_resume}')
+            raise ValueError, f'[!] No checkpoint to resume from at {path_to_resume}'
             
                 
 def train(gpu, args):
