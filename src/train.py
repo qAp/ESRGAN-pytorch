@@ -174,6 +174,7 @@ class Trainer:
             self.discriminator, delay_allreduce=True)        
 
     def build_scheduler(self, args):
+        print('Building scheduler', args.epoch)
         self.lr_scheduler_generator = torch.optim.lr_scheduler.StepLR(
             self.optimizer_generator, self.decay_batch_size,
             last_epoch=args.epoch if args.resume else -1)
