@@ -16,16 +16,7 @@ from dataloader.dataloader import get_loader
 class Trainer:
     def __init__(self, args, data_loader):
         self.args = args
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        self.num_epoch = args.num_epoch
-        self.epoch = args.epoch
-        self.image_size = args.image_size
         self.data_loader = data_loader
-        self.checkpoint_dir = args.checkpoint_dir
-        self.batch_size = args.batch_size
-        self.sample_dir = args.sample_dir
-        self.nf = args.nf
-        self.scale_factor = args.scale_factor
 
         if args.is_perceptual_oriented:
             self.lr = args.p_lr
@@ -48,8 +39,9 @@ class Trainer:
                                        'perceptual_loss', 'content_loss',
                                        'generator_loss']}
         if args.load: self.load_model(args)
-        # resume here
+#        if args.resume: self.resume(args)
         self.build_scheduler()
+        
         
     def train(self):
         total_step = len(self.data_loader)
@@ -59,9 +51,9 @@ class Trainer:
         self.generator.train()
         self.discriminator.train()
 
-        for epoch in range(self.epoch, self.num_epoch):
-            if not os.path.exists(os.path.join(self.sample_dir, str(epoch))):
-                os.makedirs(os.path.join(self.sample_dir, str(epoch)))
+        for epoch in range(args.epoch, args.num_epoch):
+            if not os.path.exists(os.path.join(args.sample_dir, str(epoch))):
+                os.makedirs(os.path.join(args.sample_dir, str(epoch)))
 
             for step, image in enumerate(self.data_loader):
                 low_resolution = image['lr'].cuda()
@@ -127,7 +119,7 @@ class Trainer:
                 self.lr_scheduler_discriminator.step()
                 
                 if step % 1000 == 0:
-                    print(f"[Epoch {epoch}/{self.num_epoch}] "
+                    print(f"[Epoch {epoch}/{args.num_epoch}] "
                           f"[Batch {step}/{total_step}] "
                           f"[D loss {discriminator_loss.item():.4f}] "
                           f"[G loss {generator_loss.item():.4f}] "
@@ -137,7 +129,7 @@ class Trainer:
                           f"")
                     if step % 5000 == 0:
                         result = torch.cat((high_resolution, fake_high_resolution), 2)
-                        save_image(result, os.path.join(self.sample_dir, str(epoch), f"SR_{step}.png"))
+                        save_image(result, os.path.join(args.sample_dir, str(epoch), f"SR_{step}.png"))
 
             self.history['adversarial_loss'].append(
                 adversarial_loss.item()*self.adversarial_loss_factor)
@@ -156,10 +148,10 @@ class Trainer:
                  'opt_d_state_dict':self.optimizer_discriminator.state_dict(),
                  'amp':apex.amp.state_dict(),
                  'args':self.args},
-                os.path.join(self.checkpoint_dir, f'checkpoint_{epoch}.pth'))
+                os.path.join(args.checkpoint_dir, f'checkpoint_{epoch}.pth'))
 
     def build_model(self):
-        self.generator = ESRGAN(3, 3, 64, scale_factor=self.scale_factor).cuda()
+        self.generator = ESRGAN(3, 3, 64, scale_factor=args.scale_factor).cuda()
         self.discriminator = Discriminator().cuda()
 
     def build_optimizer(self, args):
