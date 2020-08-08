@@ -19,6 +19,8 @@ def parse_args():
                               'input images'))
     parser.add_argument('--load', default='', type=str,
                         help='Load model. (Default: none)')
+    parser.add_argument('--resume', default='', type=str,
+                        help='Resume model. (Default: none)')
     parser.add_argument('--image_size', type=int, default=128,
                         help='the height / width of the input image to network')
     parser.add_argument('--batch_size', type=int, default=16,

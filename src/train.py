@@ -39,7 +39,7 @@ class Trainer:
                                        'perceptual_loss', 'content_loss',
                                        'generator_loss']}
         if args.load: self.load_model(args)
-#        if args.resume: self.resume(args)
+        if args.resume: self.resume(args)
         self.build_scheduler()
         
         
@@ -196,7 +196,30 @@ class Trainer:
         else:
             print(f'[!] No checkpoint found at {path_to_load}')
             
-
+    def resume(self, args):
+        path_to_resume = Path(args.resume)
+        if path_to_resume.is_file():
+            cpt = torch.load(
+                path_to_resume, map_location=lambda storage, loc: storage.cuda())
+            if cpt['epoch'] is not None: args.epoch = cpt['epoch'] + 1
+            if cpt['history'] is not None: self.history = cpt['history']
+            if cpt['g_state_dict'] is not None:
+                self.generator.load_state_dict(cpt['g_state_dict'])
+                print(f'[*] Loading generator parameters from {path_to_resume}')
+            if cpt['d_state_dict'] is not None:
+                self.discriminator.load_state_dict(cpt['d_state_dict'])
+                print(f'[*] Loading discriminator parameters from {path_to_resume}')
+            if cpt['opt_g_state_dict'] is not None:
+                self.optimizer_generator.load_state_dict(cpt['opt_g_state_dict'])
+                print(f'[*] Loading generator optmizer parameters from {path_to_resume}')
+            if cpt['opt_d_state_dict'] is not None:
+                self.optimizer_discriminator.load_state_dict(cpt['opt_d_state_dict'])
+                print(f'[*] Loading discriminator optmizer parameters from {path_to_resume}')
+            if cpt['amp'] is not None:
+                apex.amp.load_state_dict(cpt['amp'])
+        else:
+            print(f'[!] No checkpoint to resume from at {path_to_resume}')
+            
                 
 def train(gpu, args):
     print('Start of train():', gpu)
