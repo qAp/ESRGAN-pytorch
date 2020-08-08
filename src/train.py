@@ -1,5 +1,6 @@
 import os
 from glob import glob
+from pathlib import Path
 import torch, torch.nn as nn
 from torch.optim.adam import Adam
 from torchvision.utils import save_image
@@ -43,9 +44,9 @@ class Trainer:
         self.build_optimizer(args)
         self.initialize_model_opt_fp16()
         self.parallelize_model()
+        if args.load: self.load_model(args)
         self.build_scheduler()
-        self.load_model()
-
+        
     def train(self):
         total_step = len(self.data_loader)
         adversarial_criterion = nn.BCEWithLogitsLoss().cuda()
@@ -174,29 +175,22 @@ class Trainer:
         self.lr_scheduler_discriminator = torch.optim.lr_scheduler.StepLR(
             self.optimizer_discriminator, self.decay_batch_size)
         
-    def load_model(self):
-        paths_checkpoint = glob(
-            os.path.join(self.checkpoint_dir, f'checkpoint_{self.epoch-1}.pth'))
-        if not paths_checkpoint:
-            print(f'[!] No checkpoint in epoch {self.epoch - 1}')
-        else:
+    def load_model(self, args):
+        path_to_load = Path(args.load)
+        if path_to_load.is_file():
             checkpoint = torch.load(
-                paths_checkpoint[0],
-                map_location=lambda storage, loc: storage.cuda())
+                path_to_load, map_location=lambda storage, loc: storage.cuda())
             if checkpoint['g_state_dict'] is not None:
-                print(f'[*] Loading generator parameters from {paths_checkpoint[0]}')
-                self.generator.load_state_dict(checkpoint['g_state_dict'])              
-            else:
-                print(f"[!] No generator checkpoint in epoch {self.epoch - 1}")
+                self.generator.load_state_dict(checkpoint['g_state_dict'])
+                print(f'[*] Loading generator parameters from {path_to_load}')
             if checkpoint['d_state_dict'] is not None:
-                print(('[*] Loading discriminator parameters ' 
-                       f'from {paths_checkpoint[0]}'))
                 self.discriminator.load_state_dict(checkpoint['d_state_dict'])
-            else:
-                print(f"[!] No discriminator checkpoint in epoch {self.epoch - 1}")
+                print(f'[*] Loading discriminator parameters from {path_to_load}')
             if checkpoint['amp'] is not None:
                 apex.amp.load_state_dict(checkpoint['amp'])
-                
+        else:
+            print(f'[!] No checkpoint found at {path_to_load}')
+            
 
                 
 def train(gpu, args):
