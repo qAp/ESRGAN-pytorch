@@ -31,7 +31,7 @@ class Trainer:
             self.adversarial_loss_factor = args.g_adversarial_loss_factor
             self.decay_batch_size = args.g_decay_batch_size
 
-        self.build_model()
+        self.build_model(args)
         self.build_optimizer(args)
         self.initialize_model_opt_fp16()
         self.parallelize_model()
@@ -43,7 +43,7 @@ class Trainer:
         self.build_scheduler()
         
         
-    def train(self):
+    def train(self, args):
         total_step = len(self.data_loader)
         adversarial_criterion = nn.BCEWithLogitsLoss().cuda()
         content_criterion = nn.L1Loss().cuda()
@@ -150,7 +150,7 @@ class Trainer:
                  'args':self.args},
                 os.path.join(args.checkpoint_dir, f'checkpoint_{epoch}.pth'))
 
-    def build_model(self):
+    def build_model(self, args):
         self.generator = ESRGAN(3, 3, 64, scale_factor=args.scale_factor).cuda()
         self.discriminator = Discriminator().cuda()
 
@@ -219,7 +219,7 @@ def train(gpu, args):
 
     data_loader = get_loader(args)
     trainer = Trainer(args, data_loader)
-    trainer.train()
+    trainer.train(args)
             
 
 def main():
