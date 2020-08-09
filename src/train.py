@@ -123,7 +123,7 @@ class Trainer:
                           f"[D {discriminator_loss.item():.4f}] "
                           f"[G {generator_loss.item():.4f}] "
                           f"[adversarial "
-                          f"{(adversarial_loss.item()*self.adversarial_loss_factor:.4f)}]"
+                          f"{adversarial_loss.item()*self.adversarial_loss_factor:.4f}]"
                           f"[perceptual "
                           f"{perceptual_loss.item()*self.perceptual_loss_factor:.4f}]"
                           f"[content "
