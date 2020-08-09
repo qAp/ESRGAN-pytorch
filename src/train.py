@@ -50,6 +50,14 @@ class Trainer:
         self.generator.train()
         self.discriminator.train()
 
+        print(f"{'epoch':7s}"
+              f"{'batch':7s}"
+              f"{'D loss':10s}"
+              f"{'G loss':10s}"
+              f"{'adver. loss':10s}"
+              f"{'percp. loss':10s}"
+              f"{'contn. loss':10s}"
+              f"")
         for epoch in range(args.epoch, args.num_epoch):
             sample_dir_epoch = Path(args.checkpoint_dir)/'sample_dir'/str(epoch)
             sample_dir_epoch.mkdir(exist_ok=True, parents=True)
@@ -118,16 +126,13 @@ class Trainer:
                 self.lr_scheduler_discriminator.step()
                 
                 if step % 1000 == 0:
-                    print(f"[Epoch {epoch}/{args.num_epoch}] "
-                          f"[Batch {step}/{total_step}] "
-                          f"[D {discriminator_loss.item():.4f}] "
-                          f"[G {generator_loss.item():.4f}] "
-                          f"[adversarial "
-                          f"{adversarial_loss.item()*self.adversarial_loss_factor:.4f}]"
-                          f"[perceptual "
-                          f"{perceptual_loss.item()*self.perceptual_loss_factor:.4f}]"
-                          f"[content "
-                          f"{content_loss.item()*self.content_loss_factor:.4f}]"
+                    print(f"{epoch:3d}/{args.num_epoch:3d}"
+                          f"{step:3d}/{total_step:3d}"
+                          f"{discriminator_loss.item():10.4f}"
+                          f"{generator_loss.item():10.4f}"
+                          f"{adversarial_loss.item()*self.adversarial_loss_factor:10.4f}"
+                          f"{perceptual_loss.item()*self.perceptual_loss_factor:10.4f}"
+                          f"{content_loss.item()*self.content_loss_factor:10.4f}"
                           f"")
                     if step % 5000 == 0:
                         result = torch.cat((high_resolution, fake_high_resolution), 2)
