@@ -147,7 +147,7 @@ class Trainer:
                  'opt_d_state_dict':self.optimizer_discriminator.state_dict(),
                  'amp':apex.amp.state_dict(),
                  'args':self.args},
-                os.path.join(args.checkpoint_dir, f'checkpoint_{epoch}.pth'))
+                os.path.join(args.checkpoint_dir, f'last.pth'))
 
     def build_model(self, args):
         self.generator = ESRGAN(3, 3, 64, scale_factor=args.scale_factor).cuda()
