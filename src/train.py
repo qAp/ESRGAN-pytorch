@@ -51,8 +51,8 @@ class Trainer:
         self.discriminator.train()
 
         for epoch in range(args.epoch, args.num_epoch):
-            if not os.path.exists(os.path.join(args.sample_dir, str(epoch))):
-                os.makedirs(os.path.join(args.sample_dir, str(epoch)))
+            sample_dir_epoch = Path(args.checkpoint_dir)/'sample_dir'/str(epoch)
+            sample_dir_epoch.mkdir(exist_ok=True)
 
             for step, image in enumerate(self.data_loader):
                 low_resolution = image['lr'].cuda()
@@ -128,7 +128,7 @@ class Trainer:
                           f"")
                     if step % 5000 == 0:
                         result = torch.cat((high_resolution, fake_high_resolution), 2)
-                        save_image(result, os.path.join(args.sample_dir, str(epoch), f"SR_{step}.png"))
+                        save_image(result, sample_dir_epoch/f"SR_{step}.png")
 
             self.history['adversarial_loss'].append(
                 adversarial_loss.item()*self.adversarial_loss_factor)
@@ -236,8 +236,6 @@ def train(gpu, args):
         args.checkpoint_dir = 'checkpoints'
     if not os.path.exists(args.checkpoint_dir): 
         os.makedirs(args.checkpoint_dir)
-    if not os.path.exists(args.sample_dir):
-        os.makedirs(args.sample_dir)
 
     print(f"ESRGAN start")
     print(args)
