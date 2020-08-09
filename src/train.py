@@ -120,11 +120,14 @@ class Trainer:
                 if step % 1000 == 0:
                     print(f"[Epoch {epoch}/{args.num_epoch}] "
                           f"[Batch {step}/{total_step}] "
-                          f"[D loss {discriminator_loss.item():.4f}] "
-                          f"[G loss {generator_loss.item():.4f}] "
-                          f"[adversarial loss {adversarial_loss.item() * self.adversarial_loss_factor:.4f}]"
-                          f"[perceptual loss {perceptual_loss.item() * self.perceptual_loss_factor:.4f}]"
-                          f"[content loss {content_loss.item() * self.content_loss_factor:.4f}]"
+                          f"[D {discriminator_loss.item():.4f}] "
+                          f"[G {generator_loss.item():.4f}] "
+                          f"[adversarial "
+                          f"{(adversarial_loss.item()*self.adversarial_loss_factor:.4f)}]"
+                          f"[perceptual "
+                          f"{perceptual_loss.item()*self.perceptual_loss_factor:.4f}]"
+                          f"[content "
+                          f"{content_loss.item()*self.content_loss_factor:.4f}]"
                           f"")
                     if step % 5000 == 0:
                         result = torch.cat((high_resolution, fake_high_resolution), 2)
