@@ -52,7 +52,7 @@ class Trainer:
 
         for epoch in range(args.epoch, args.num_epoch):
             sample_dir_epoch = Path(args.checkpoint_dir)/'sample_dir'/str(epoch)
-            sample_dir_epoch.mkdir(exist_ok=True)
+            sample_dir_epoch.mkdir(exist_ok=True, parents=True)
 
             for step, image in enumerate(self.data_loader):
                 low_resolution = image['lr'].cuda()
