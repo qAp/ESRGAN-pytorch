@@ -34,7 +34,7 @@ class Trainer:
         self.build_model(args)
         self.build_optimizer(args)
         self.initialize_model_opt_fp16()
-        self.parallelize_model()
+        if args.distributed: self.parallelize_model()
         self.history = {n:[] for n in ['adversarial_loss', 'discriminator_loss',
                                        'perceptual_loss', 'content_loss',
                                        'generator_loss']}
@@ -231,12 +231,15 @@ class Trainer:
 def train(gpu, args):
     print('Start of train():', gpu)
     args.rank = args.nr * args.gpus + gpu
-    dist.init_process_group(backend='nccl', init_method='env://',
-                            world_size=args.world_size, rank=args.rank)
+    args.distributed = args.world_size > 1
+
+    if args.distributed:
+        torch.cuda.set_device(gpu)
+        dist.init_process_group(backend='nccl', init_method='env://',
+                                world_size=args.world_size, rank=args.rank)
 
     torch.manual_seed(0)
-    torch.cuda.set_device(gpu)
-    
+        
     if args.checkpoint_dir is None:
         args.checkpoint_dir = 'checkpoints'
     if not os.path.exists(args.checkpoint_dir): 
