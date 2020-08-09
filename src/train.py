@@ -33,7 +33,7 @@ class Trainer:
 
         self.build_model(args)
         self.build_optimizer(args)
-        self.initialize_model_opt_fp16()
+        if args.fp16: self.initialize_model_opt_fp16()
         self.parallelize_model()
         self.history = {n:[] for n in ['adversarial_loss', 'discriminator_loss',
                                        'perceptual_loss', 'content_loss',
@@ -87,9 +87,13 @@ class Trainer:
                                   perceptual_loss * self.perceptual_loss_factor + 
                                   content_loss * self.content_loss_factor)
 
-                with apex.amp.scale_loss(
-                        generator_loss, self.optimizer_generator) as scaled_loss:
-                    scaled_loss.backward()
+                if args.fp16:
+                    with apex.amp.scale_loss(
+                            generator_loss, self.optimizer_generator) as scaled_loss:
+                        scaled_loss.backward()
+                else:
+                    generator_loss.backward()
+                    
                 self.optimizer_generator.step()
 
                 ##########################
@@ -109,9 +113,13 @@ class Trainer:
                     discriminator_fr, fake_labels)
                 discriminator_loss = (adversarial_loss_fr + adversarial_loss_rf) / 2
 
-                with apex.amp.scale_loss(discriminator_loss,
-                                         self.optimizer_discriminator) as scaled_loss:
-                    scaled_loss.backward()
+                if args.fp16:
+                    with apex.amp.scale_loss(discriminator_loss,
+                                             self.optimizer_discriminator) as scaled_loss:
+                        scaled_loss.backward()
+                else:
+                    discriminator_loss.backward()
+                    
                 self.optimizer_discriminator.step()
 
                 self.lr_scheduler_generator.step()
@@ -150,7 +158,7 @@ class Trainer:
                  'd_state_dict':self.discriminator.state_dict(),
                  'opt_g_state_dict':self.optimizer_generator.state_dict(),
                  'opt_d_state_dict':self.optimizer_discriminator.state_dict(),
-                 'amp':apex.amp.state_dict(),
+                 'amp':apex.amp.state_dict() if args.fp16 else None,
                  'args':self.args},
                 os.path.join(args.checkpoint_dir, f'last.pth'))
 
@@ -198,7 +206,7 @@ class Trainer:
             if checkpoint['d_state_dict'] is not None:
                 self.discriminator.load_state_dict(checkpoint['d_state_dict'])
                 print(f'[*] Loading discriminator parameters from {path_to_load}')
-            if checkpoint['amp'] is not None:
+            if args.fp16 and checkpoint['amp'] is not None:
                 apex.amp.load_state_dict(checkpoint['amp'])
         else:
             print(f'[!] No checkpoint found at {path_to_load}')
@@ -222,7 +230,7 @@ class Trainer:
             if cpt['opt_d_state_dict'] is not None:
                 self.optimizer_discriminator.load_state_dict(cpt['opt_d_state_dict'])
                 print(f'[*] Loading discriminator optmizer parameters from {path_to_resume}')
-            if cpt['amp'] is not None:
+            if args.fp16 and cpt['amp'] is not None:
                 apex.amp.load_state_dict(cpt['amp'])
         else:
             raise ValueError(f'[!] No checkpoint to resume from at {path_to_resume}')

@@ -74,6 +74,7 @@ def parse_args():
                         help='adversarial loss factor when training generator oriented')
     parser.add_argument('--is_perceptual_oriented', type=boolean_string, default=True,
                         help='Train a PSNR-oriented G network')
+    parser.add_argument('--fp16', action='store_true')
 
     url = ['http://data.vision.ee.ethz.ch/cvl/DIV2K/DIV2K_train_HR.zip',
            'http://cv.snu.ac.kr/research/EDSR/Flickr2K.tar']
