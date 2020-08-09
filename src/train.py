@@ -50,10 +50,6 @@ class Trainer:
         self.generator.train()
         self.discriminator.train()
 
-        print(f"{'epoch':>7s}"  f"{'batch':>7s}" f"{'discr.':>10s}"
-              f"{'gener.':>10s}" f"{'adver.':>10s}" f"{'percp.':>10s}"
-              f"{'contn.':>10s}" f"")
-        
         for epoch in range(args.epoch, args.num_epoch):
             sample_dir_epoch = Path(args.checkpoint_dir)/'sample_dir'/str(epoch)
             sample_dir_epoch.mkdir(exist_ok=True, parents=True)
