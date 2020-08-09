@@ -120,7 +120,12 @@ class Trainer:
 
                 self.lr_scheduler_generator.step()
                 self.lr_scheduler_discriminator.step()
-                
+
+                if step % 5000 == 0:
+                    print(f"{'epoch':>7s}"  f"{'batch':>7s}" f"{'discr.':>10s}"
+                          f"{'gener.':>10s}" f"{'adver.':>10s}" f"{'percp.':>10s}"
+                          f"{'contn.':>10s}" f"")
+
                 if step % 1000 == 0:
                     print(f"{epoch:>3d}:{args.num_epoch:<3d}"
                           f"{step:>3d}:{total_step:<3d}"
@@ -131,10 +136,6 @@ class Trainer:
                           f"{content_loss.item()*self.content_loss_factor:>10.4f}"
                           f"")
                     if step % 5000 == 0:
-                        print(f"{'epoch':>7s}"  f"{'batch':>7s}" f"{'discr.':>10s}"
-                              f"{'gener.':>10s}" f"{'adver.':>10s}" f"{'percp.':>10s}"
-                              f"{'contn.':>10s}" f"")
-                        
                         result = torch.cat((high_resolution, fake_high_resolution), 2)
                         save_image(result, sample_dir_epoch/f"SR_{step}.png")
 
