@@ -142,7 +142,7 @@ class Trainer:
                           f"{adversarial_loss.item()*self.adversarial_loss_factor:>10.4f}"
                           f"{perceptual_loss.item()*self.perceptual_loss_factor:>10.4f}"
                           f"{content_loss.item()*self.content_loss_factor:>10.4f}"
-                          f"{scaore.item():>10.4f}"
+                          f"{score.item():>10.4f}"
                           f"")
                     if step % 5000 == 0:
                         result = torch.cat((high_resolution, fake_high_resolution), 2)
