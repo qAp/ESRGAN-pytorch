@@ -49,6 +49,7 @@ class Trainer:
         adversarial_criterion = nn.BCEWithLogitsLoss().cuda()
         content_criterion = nn.L1Loss().cuda()
         perception_criterion = PerceptualLoss().cuda()
+        self.best_score = -9999.
         self.generator.train()
         self.discriminator.train()
 
@@ -157,16 +158,23 @@ class Trainer:
                 content_loss.item()*self.content_loss_factor)
             self.history['generator_loss'].append(generator_loss.item())
             self.history['score'].append(score.item())
-                        
-            torch.save(
-                {'epoch':epoch, 'history':self.history,
-                 'g_state_dict':self.generator.state_dict(),
-                 'd_state_dict':self.discriminator.state_dict(),
-                 'opt_g_state_dict':self.optimizer_generator.state_dict(),
-                 'opt_d_state_dict':self.optimizer_discriminator.state_dict(),
-                 'amp':apex.amp.state_dict() if args.fp16 else None,
-                 'args':self.args},
-                os.path.join(args.checkpoint_dir, f'last.pth'))
+
+            save_dict = {
+                'epoch':epoch, 'history':self.history,
+                'g_state_dict':self.generator.state_dict(),
+                'd_state_dict':self.discriminator.state_dict(),
+                'opt_g_state_dict':self.optimizer_generator.state_dict(),
+                'opt_d_state_dict':self.optimizer_discriminator.state_dict(),
+                'amp':apex.amp.state_dict() if args.fp16 else None,
+                'args':self.args}
+            
+            torch.save(save_dict,
+                       os.path.join(args.checkpoint_dir, f'last.pth'))
+
+            if score > self.best_score:
+                self.best_score = score
+                torch.save(save_dict,
+                           os.path.join(args.checkpoint_dir, f'best.pth'))
 
     def build_model(self, args):
         self.generator = ESRGAN(3, 3, 64, scale_factor=args.scale_factor).cuda()
