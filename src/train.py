@@ -1,12 +1,13 @@
 import os
 from glob import glob
 from pathlib import Path
-import torch, torch.nn as nn
+import torch, torch.nn as nn, torch.nn.functional as F
 from torch.optim.adam import Adam
 from torchvision.utils import save_image
 import torch.multiprocessing as mp, torch.distributed as dist
 import apex
 from loss.loss import PerceptualLoss
+from metrics import PSNR
 from config.config import parse_args
 from model.ESRGAN import ESRGAN
 from model.Discriminator import Discriminator
@@ -17,6 +18,7 @@ class Trainer:
     def __init__(self, args, data_loader):
         self.args = args
         self.data_loader = data_loader
+        self.metric = PSNR()
 
         if args.is_perceptual_oriented:
             self.lr = args.p_lr
@@ -37,7 +39,7 @@ class Trainer:
         self.parallelize_model()
         self.history = {n:[] for n in ['adversarial_loss', 'discriminator_loss',
                                        'perceptual_loss', 'content_loss',
-                                       'generator_loss']}
+                                       'generator_loss', 'score']}
         if args.load: self.load_model(args)
         if args.resume: self.resume(args)
         self.build_scheduler(args)
@@ -128,9 +130,11 @@ class Trainer:
                 if step % 5000 == 0:
                     print(f"{'epoch':>7s}"  f"{'batch':>7s}" f"{'discr.':>10s}"
                           f"{'gener.':>10s}" f"{'adver.':>10s}" f"{'percp.':>10s}"
-                          f"{'contn.':>10s}" f"")
+                          f"{'contn.':>10s}" f"{'PSNR':>10s}" f"")
 
                 if step % 1000 == 0:
+                    score = self.metric(fake_high_resolution.detach(),
+                                        high_resolution)
                     print(f"{epoch:>3d}:{args.num_epoch:<3d}"
                           f"{step:>3d}:{total_step:<3d}"
                           f"{discriminator_loss.item():>10.4f}"
@@ -138,6 +142,7 @@ class Trainer:
                           f"{adversarial_loss.item()*self.adversarial_loss_factor:>10.4f}"
                           f"{perceptual_loss.item()*self.perceptual_loss_factor:>10.4f}"
                           f"{content_loss.item()*self.content_loss_factor:>10.4f}"
+                          f"{scaore.item():>10.4f}"
                           f"")
                     if step % 5000 == 0:
                         result = torch.cat((high_resolution, fake_high_resolution), 2)
@@ -151,6 +156,7 @@ class Trainer:
             self.history['content_loss'].append(
                 content_loss.item()*self.content_loss_factor)
             self.history['generator_loss'].append(generator_loss.item())
+            self.history['score'].append(score.item())
                         
             torch.save(
                 {'epoch':epoch, 'history':self.history,
