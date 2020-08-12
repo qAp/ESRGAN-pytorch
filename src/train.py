@@ -36,7 +36,7 @@ class Trainer:
         self.build_model(args)
         self.build_optimizer(args)
         if args.fp16: self.initialize_model_opt_fp16()
-        if args.distributed: self.parallelize_model()
+        self.parallelize_model()
         self.history = {n:[] for n in ['adversarial_loss', 'discriminator_loss',
                                        'perceptual_loss', 'content_loss',
                                        'generator_loss', 'score']}
