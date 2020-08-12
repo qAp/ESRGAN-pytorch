@@ -43,6 +43,7 @@ class Trainer:
         if args.load: self.load_model(args)
         if args.resume: self.resume(args)
         self.build_scheduler(args)
+        print(':D')
 
     def train(self, args):
         total_step = len(self.data_loader)
@@ -258,7 +259,7 @@ class Trainer:
     def save(self, epoch, filename):
         g_sdict = self.generator.state_dict()
         d_sdict = self.discriminator.state_dict()
-        if args.distributed==False:
+        if self.args.distributed==False:
             g_sdict = {f'module.{k}':v for k, v in g_sdict.items()}
             d_sdict = {f'module.{k}':v for k, v in d_sdict.items()}
         save_dict = {
