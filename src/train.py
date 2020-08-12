@@ -159,22 +159,10 @@ class Trainer:
             self.history['generator_loss'].append(generator_loss.item())
             self.history['score'].append(score.item())
 
-            save_dict = {
-                'epoch':epoch, 'history':self.history,
-                'g_state_dict':self.generator.state_dict(),
-                'd_state_dict':self.discriminator.state_dict(),
-                'opt_g_state_dict':self.optimizer_generator.state_dict(),
-                'opt_d_state_dict':self.optimizer_discriminator.state_dict(),
-                'amp':apex.amp.state_dict() if args.fp16 else None,
-                'args':self.args}
-            
-            torch.save(save_dict,
-                       os.path.join(args.checkpoint_dir, f'last.pth'))
-
+            self.save(epoch, 'last.pth')
             if score > self.best_score:
                 self.best_score = score
-                torch.save(save_dict,
-                           os.path.join(args.checkpoint_dir, f'best.pth'))
+                self.save(epoch, 'best.pth')
 
     def build_model(self, args):
         self.generator = ESRGAN(3, 3, 64, scale_factor=args.scale_factor).cuda()
@@ -212,42 +200,77 @@ class Trainer:
     def load_model(self, args):
         path_to_load = Path(args.load)
         if path_to_load.is_file():
-            checkpoint = torch.load(
-                path_to_load, map_location=lambda storage, loc: storage.cuda())
-            if checkpoint['g_state_dict'] is not None:
-                self.generator.load_state_dict(checkpoint['g_state_dict'])
-                print(f'[*] Loading generator parameters from {path_to_load}')
-            if checkpoint['d_state_dict'] is not None:
-                self.discriminator.load_state_dict(checkpoint['d_state_dict'])
-                print(f'[*] Loading discriminator parameters from {path_to_load}')
-            if args.fp16 and checkpoint['amp'] is not None:
-                apex.amp.load_state_dict(checkpoint['amp'])
+            cpt = torch.load(path_to_load,
+                             map_location=lambda storage, loc: storage.cuda())
+            g_sdict = cpt['g_state_dict']
+            d_sdict = cpt['d_state_dict']
+            if g_sdict is not None:
+                if args.distributed==False:
+                    g_sdict = {k[7:] if k.startswith('module.') else k:v
+                               for k, v in g_sdict.items()}
+                self.generator.load_state_dict(g_sdict)
+                print(f'[*] Loading generator from {path_to_load}')
+            if d_sdict is not None:
+                if args.distributed==False:
+                    d_sdict = {k[7:] if k.startswith('module.') else k:v
+                               for k, v in d_sdict.items()}
+                self.discriminator.load_state_dict(d_sdict)
+                print(f'[*] Loading discriminator from {path_to_load}')
+            if args.fp16 and cpt['amp'] is not None:
+                apex.amp.load_state_dict(cpt['amp'])
         else:
             print(f'[!] No checkpoint found at {path_to_load}')
             
     def resume(self, args):
         path_to_resume = Path(args.resume)
         if path_to_resume.is_file():
-            cpt = torch.load(
-                path_to_resume, map_location=lambda storage, loc: storage.cuda())
+            cpt = torch.load(path_to_resume,
+                             map_location=lambda storage, loc: storage.cuda())
+            g_sdict, d_sdict = cpt['g_state_dict'], cpt['d_state_dict']
+            optg_sdict = cpt['opt_g_state_dict']
+            optd_sdict = cpt['opt_d_state_dict']
             if cpt['epoch'] is not None: args.epoch = cpt['epoch'] + 1
             if cpt['history'] is not None: self.history = cpt['history']
-            if cpt['g_state_dict'] is not None:
-                self.generator.load_state_dict(cpt['g_state_dict'])
-                print(f'[*] Loading generator parameters from {path_to_resume}')
-            if cpt['d_state_dict'] is not None:
-                self.discriminator.load_state_dict(cpt['d_state_dict'])
-                print(f'[*] Loading discriminator parameters from {path_to_resume}')
-            if cpt['opt_g_state_dict'] is not None:
-                self.optimizer_generator.load_state_dict(cpt['opt_g_state_dict'])
-                print(f'[*] Loading generator optmizer parameters from {path_to_resume}')
-            if cpt['opt_d_state_dict'] is not None:
-                self.optimizer_discriminator.load_state_dict(cpt['opt_d_state_dict'])
-                print(f'[*] Loading discriminator optmizer parameters from {path_to_resume}')
+            if g_sdict is not None:
+                if args.distributed==False:
+                    g_sdict = {k[7:] if k.startswith('module.') else k:v
+                               for k, v in g_sdict.items()}
+                self.generator.load_state_dict(g_sdict)
+                print(f'[*] Loading generator from {path_to_resume}')
+            if d_sdict is not None:
+                if args.distributed==False:
+                    d_sdict = {k[7:] if k.startswith('module.') else k:v
+                               for k, v in d_sdict.items()}
+                self.discriminator.load_state_dict(d_sdict)
+                print(f'[*] Loading discriminator from {path_to_resume}')
+            if optg_sdict is not None:
+                self.optimizer_generator.load_state_dict(optg_sdict)
+                print(f'[*] Loading generator optmizer from {path_to_resume}')
+            if optd_sdict is not None:
+                self.optimizer_discriminator.load_state_dict(optd_sdict)
+                print(f'[*] Loading discriminator optmizer '
+                      f'from {path_to_resume}')
             if args.fp16 and cpt['amp'] is not None:
                 apex.amp.load_state_dict(cpt['amp'])
         else:
             raise ValueError(f'[!] No checkpoint to resume from at {path_to_resume}')
+
+    def save(self, epoch, filename):
+        g_sdict = self.generator.state_dict()
+        d_sdict = self.discriminator.state_dict()
+        if args.distributed==False:
+            g_sdict = {f'module.{k}':v for k, v in g_sdict.items()}
+            d_sdict = {f'module.{k}':v for k, v in d_sdict.items()}
+        save_dict = {
+            'epoch':epoch, 'history':self.history,
+            'g_state_dict':g_sdict,
+            'd_state_dict':d_sdict,
+            'opt_g_state_dict':self.optimizer_generator.state_dict(),
+            'opt_d_state_dict':self.optimizer_discriminator.state_dict(),
+            'amp':apex.amp.state_dict() if self.args.fp16 else None,
+            'args':self.args}
+            torch.save(save_dict, Path(self.args.checkpoint_dir)/filename)
+
             
                 
 def train(gpu, args):
