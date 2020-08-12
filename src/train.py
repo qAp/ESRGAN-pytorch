@@ -269,7 +269,7 @@ class Trainer:
             'opt_d_state_dict':self.optimizer_discriminator.state_dict(),
             'amp':apex.amp.state_dict() if self.args.fp16 else None,
             'args':self.args}
-            torch.save(save_dict, Path(self.args.checkpoint_dir)/filename)
+        torch.save(save_dict, Path(self.args.checkpoint_dir)/filename)
 
             
                 
