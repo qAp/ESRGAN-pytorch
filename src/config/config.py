@@ -14,6 +14,8 @@ def parse_args():
                         help='number of gpus per node')
     parser.add_argument('-nr', '--nr', default=0, type=int,
                         help='ranking within the nodes')
+    parser.add_argument('--distributed', action='store_true',
+                        help='Use distributed training.')
     parser.add_argument('--input_dir', default='datasets',
                         help=('folder that has hr and lr folders which have '
                               'input images'))
