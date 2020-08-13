@@ -129,7 +129,7 @@ class Trainer:
                 self.lr_scheduler_generator.step()
                 self.lr_scheduler_discriminator.step()
 
-                if step % 5000 == 0:
+                if epoch % 5 == 0:
                     print(f"{'epoch':>7s}"  f"{'batch':>7s}" f"{'discr.':>10s}"
                           f"{'gener.':>10s}" f"{'adver.':>10s}" f"{'percp.':>10s}"
                           f"{'contn.':>10s}" f"{'PSNR':>10s}" f"")
