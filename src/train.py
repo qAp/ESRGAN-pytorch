@@ -58,6 +58,11 @@ class Trainer:
             sample_dir_epoch = Path(args.checkpoint_dir)/'sample_dir'/str(epoch)
             sample_dir_epoch.mkdir(exist_ok=True, parents=True)
 
+            if epoch % 5 == 0:
+                print(f"{'epoch':>7s}"  f"{'batch':>7s}" f"{'discr.':>10s}"
+                      f"{'gener.':>10s}" f"{'adver.':>10s}" f"{'percp.':>10s}"
+                      f"{'contn.':>10s}" f"{'PSNR':>10s}" f"")
+                
             for step, image in enumerate(self.data_loader):
                 low_resolution = image['lr'].cuda()
                 high_resolution = image['hr'].cuda()
@@ -129,10 +134,7 @@ class Trainer:
                 self.lr_scheduler_generator.step()
                 self.lr_scheduler_discriminator.step()
 
-                if epoch % 5 == 0:
-                    print(f"{'epoch':>7s}"  f"{'batch':>7s}" f"{'discr.':>10s}"
-                          f"{'gener.':>10s}" f"{'adver.':>10s}" f"{'percp.':>10s}"
-                          f"{'contn.':>10s}" f"{'PSNR':>10s}" f"")
+
 
                 if step % 1000 == 0:
                     score = self.metric(fake_high_resolution.detach(),
