@@ -68,7 +68,7 @@ def parse_args():
     parser.add_argument('--g_decay_batch_size', type=int, default=1e5,
                         help=('batch size where learning rate halve each '
                               'when training generator oriented'))
-    parser.add_argument('--g_content_loss_factor', type=float, default=1e-1,
+    parser.add_argument('--g_content_loss_factor', type=float, default=1e-2,
                         help='content loss factor when training generator oriented')
     parser.add_argument('--g_perceptual_loss_factor', type=float, default=1,
                         help='perceptual loss factor when training generator oriented')
