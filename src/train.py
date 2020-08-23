@@ -25,13 +25,13 @@ class Trainer:
             self.content_loss_factor = args.p_content_loss_factor
             self.perceptual_loss_factor = args.p_perceptual_loss_factor
             self.adversarial_loss_factor = args.p_adversarial_loss_factor
-            self.decay_batch_size = args.p_decay_batch_size
+            self.decay_iter = args.p_decay_iter
         else:
             self.lr = args.g_lr
             self.content_loss_factor = args.g_content_loss_factor
             self.perceptual_loss_factor = args.g_perceptual_loss_factor
             self.adversarial_loss_factor = args.g_adversarial_loss_factor
-            self.decay_batch_size = args.g_decay_batch_size
+            self.decay_iter = args.g_decay_iter
 
         self.build_model(args)
         self.build_optimizer(args)
@@ -193,11 +193,11 @@ class Trainer:
 
     def build_scheduler(self, args):
         print('Building scheduler', args.epoch)
-        self.lr_scheduler_generator = torch.optim.lr_scheduler.StepLR(
-            self.optimizer_generator, self.decay_batch_size,
+        self.lr_scheduler_generator = torch.optim.lr_scheduler.MultiStepLR(
+            self.optimizer_generator, milestones=self.decay_iter, gamma=.5,
             last_epoch=args.epoch if args.resume else -1)
-        self.lr_scheduler_discriminator = torch.optim.lr_scheduler.StepLR(
-            self.optimizer_discriminator, self.decay_batch_size,
+        self.lr_scheduler_discriminator = torch.optim.lr_scheduler.MultiStepLR(
+            self.optimizer_discriminator, milestones=self.decay_iter, gamma=.5,
             last_epoch=args.epoch if args.resume else -1)
         
     def load_model(self, args):

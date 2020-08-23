@@ -53,9 +53,10 @@ def parse_args():
                         help='weight decay')
     parser.add_argument('--p_lr', type=float, default=2e-4,
                         help='learning rate when when training perceptual oriented')
-    parser.add_argument('--p_decay_batch_size', type=int, default=2e5,
-                        help=('batch size where learning rate halve each '
-                              'when training perceptual oriented'))
+    parser.add_argument('--p_decay_iter', type=int, nargs='+',
+                        default=[2e5, 2*2e5, 3*2e5, 4*2e5, 5*2e5],
+                        help=('Milestones of number of mini-batches at which'
+                              'to halve the learning rate.'))
     parser.add_argument('--p_content_loss_factor', type=float, default=1,
                         help='content loss factor when training perceptual oriented')
     parser.add_argument('--p_perceptual_loss_factor', type=float, default=0,
@@ -65,9 +66,10 @@ def parse_args():
                               'perceptual oriented'))
     parser.add_argument('--g_lr', type=float, default=1e-4,
                         help='learning rate when when training generator oriented')
-    parser.add_argument('--g_decay_batch_size', type=int, default=1e5,
-                        help=('batch size where learning rate halve each '
-                              'when training generator oriented'))
+    parser.add_argument('--g_decay_iter', type=int, nargs='+',
+                        default=[50000, 100000, 200000, 300000, 400000, 500000],
+                        help=('Milestones of number of mini-batches at which'
+                              'to halve the learning rate.'))
     parser.add_argument('--g_content_loss_factor', type=float, default=1e-2,
                         help='content loss factor when training generator oriented')
     parser.add_argument('--g_perceptual_loss_factor', type=float, default=1,
