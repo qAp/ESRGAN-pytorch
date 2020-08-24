@@ -195,6 +195,8 @@ class Trainer:
             self.discriminator, delay_allreduce=True)        
 
     def build_scheduler(self, args):
+        if not hasattr(self, 'unit_scheduler_step'):
+            self.unit_scheduler_step = -1
         self.n_unit_scheduler_step = (args.batch_size//16) * args.nodes
         print(f'Batch size: {args.batch_size}. '
               f'Number of nodes: {args.nodes}. '
