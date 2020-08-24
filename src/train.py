@@ -137,6 +137,7 @@ class Trainer:
                 for _ in range(self.n_unit_scheduler_step):
                     self.lr_scheduler_generator.step()
                     self.lr_scheduler_discriminator.step()
+                    self.unit_scheduler_step += 1
 
                 if step % 1000 == 0:
                     score = self.metric(fake_high_resolution.detach(),
@@ -194,7 +195,6 @@ class Trainer:
             self.discriminator, delay_allreduce=True)        
 
     def build_scheduler(self, args):
-        print('Building scheduler', args.epoch)
         self.n_unit_scheduler_step = (args.batch_size//16) * args.nodes
         print(f'Batch size: {args.batch_size}. '
               f'Number of nodes: {args.nodes}. '
@@ -202,10 +202,10 @@ class Trainer:
               f'unit scheduler step in the paper.')
         self.lr_scheduler_generator = torch.optim.lr_scheduler.MultiStepLR(
             self.optimizer_generator, milestones=self.decay_iter, gamma=.5,
-            last_epoch=args.epoch if args.resume else -1)
+            last_epoch=self.unit_scheduler_step if args.resume else -1)
         self.lr_scheduler_discriminator = torch.optim.lr_scheduler.MultiStepLR(
             self.optimizer_discriminator, milestones=self.decay_iter, gamma=.5,
-            last_epoch=args.epoch if args.resume else -1)
+            last_epoch=self.unit_scheduler_step if args.resume else -1)
         
     def load_model(self, args):
         path_to_load = Path(args.load)
@@ -236,11 +236,13 @@ class Trainer:
         if path_to_resume.is_file():
             cpt = torch.load(path_to_resume,
                              map_location=lambda storage, loc: storage.cuda())
+            if cpt['epoch'] is not None: args.epoch = cpt['epoch'] + 1
+            if cpt['unit_scheduler_step'] is not None:
+                self.unit_scheduler_step = cpt['unit_scheduler_step'] + 1
+            if cpt['history'] is not None: self.history = cpt['history']
             g_sdict, d_sdict = cpt['g_state_dict'], cpt['d_state_dict']
             optg_sdict = cpt['opt_g_state_dict']
             optd_sdict = cpt['opt_d_state_dict']
-            if cpt['epoch'] is not None: args.epoch = cpt['epoch'] + 1
-            if cpt['history'] is not None: self.history = cpt['history']
             if g_sdict is not None:
                 if args.distributed==False:
                     g_sdict = {k[7:] if k.startswith('module.') else k:v
@@ -272,7 +274,9 @@ class Trainer:
             g_sdict = {f'module.{k}':v for k, v in g_sdict.items()}
             d_sdict = {f'module.{k}':v for k, v in d_sdict.items()}
         save_dict = {
-            'epoch':epoch, 'history':self.history,
+            'epoch':epoch,
+            'unit_scheduler_step':self.unit_scheduler_step,
+            'history':self.history,
             'g_state_dict':g_sdict,
             'd_state_dict':d_sdict,
             'opt_g_state_dict':self.optimizer_generator.state_dict(),
