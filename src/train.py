@@ -134,10 +134,9 @@ class Trainer:
                     
                 self.optimizer_discriminator.step()
 
-                self.lr_scheduler_generator.step()
-                self.lr_scheduler_discriminator.step()
-
-
+                for _ in range(self.n_unit_scheduler_step):
+                    self.lr_scheduler_generator.step()
+                    self.lr_scheduler_discriminator.step()
 
                 if step % 1000 == 0:
                     score = self.metric(fake_high_resolution.detach(),
@@ -196,6 +195,11 @@ class Trainer:
 
     def build_scheduler(self, args):
         print('Building scheduler', args.epoch)
+        self.n_unit_scheduler_step = (args.batch_size//16) * args.n
+        print(f'Batch size: {args.batch_size}. '
+              f'Number of nodes: {args.n}. '
+              f'Each step here equates to {self.n_unit_scheduler_step} '
+              f'unit scheduler step in the paper.')
         self.lr_scheduler_generator = torch.optim.lr_scheduler.MultiStepLR(
             self.optimizer_generator, milestones=self.decay_iter, gamma=.5,
             last_epoch=args.epoch if args.resume else -1)
