@@ -198,7 +198,8 @@ class Trainer:
         print(f'Batch size: {args.batch_size}. '
               f'Number of nodes: {args.nodes}. '
               f'Each step here equates to {self.n_unit_scheduler_step} '
-              f'unit scheduler step in the paper.')
+              f'unit scheduler step in the paper.\n'
+              f'Current unit scheduler step: {self.unit_scheduler_step}.')
         self.lr_scheduler_generator = torch.optim.lr_scheduler.MultiStepLR(
             self.optimizer_generator, milestones=self.decay_iter, gamma=.5,
             last_epoch=self.unit_scheduler_step if args.resume else -1)
