@@ -195,9 +195,9 @@ class Trainer:
 
     def build_scheduler(self, args):
         print('Building scheduler', args.epoch)
-        self.n_unit_scheduler_step = (args.batch_size//16) * args.n
+        self.n_unit_scheduler_step = (args.batch_size//16) * args.nodes
         print(f'Batch size: {args.batch_size}. '
-              f'Number of nodes: {args.n}. '
+              f'Number of nodes: {args.nodes}. '
               f'Each step here equates to {self.n_unit_scheduler_step} '
               f'unit scheduler step in the paper.')
         self.lr_scheduler_generator = torch.optim.lr_scheduler.MultiStepLR(
