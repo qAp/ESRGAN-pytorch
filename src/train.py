@@ -64,6 +64,9 @@ class Trainer:
                       f"{'contn.':>10s}" f"{'PSNR':>10s}" f"")
                 
             for step, image in enumerate(self.data_loader):
+                print(step, len(self.data_loader),
+                      self.lr_scheduler_generator._step_count,
+                      self.lr_scheduler_discriminator._step_count)
                 low_resolution = image['lr'].cuda()
                 high_resolution = image['hr'].cuda()
 
