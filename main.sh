@@ -4,13 +4,13 @@
 
 
 # Example: Start PSNR-based training.
-python src/train.py -n 2 -g 1 -nr 0 --input_dir=./datasets --load=./parameters/gan_based.pth --checkpoint_dir=./results/exp16  --batch_size=16 --epoch=0 --num_epoch=350 --is_perceptual_oriented=True --scale_factor=4 --fp16 --distributed
+#python src/train.py -n 2 -g 1 -nr 0 --input_dir=./datasets --load=./parameters/gan_based.pth --checkpoint_dir=./results/exp16  --batch_size=16 --epoch=0 --num_epoch=350 --is_perceptual_oriented=True --scale_factor=4 --fp16 --distributed
 
 # Example: Resume  PSNR-based training.
 #python src/train.py -n 2 -g 1 -nr 0 --input_dir=./datasets --resume=./results/exp14/last.pth --checkpoint_dir=./results/exp14  --batch_size=16 --epoch=0 --num_epoch=350 --is_perceptual_oriented=True --scale_factor=4 --fp16 --distributed
 
 # Example: Start GAN-based training.
-# python src/train.py -n 2 -g 1 -nr 0 --input_dir=./datasets --load=./results/exp14/best.pth --checkpoint_dir=./results/exp15  --batch_size=16 --epoch=0 --num_epoch=200 --is_perceptual_oriented=False --scale_factor=4 --fp16 --distributed
+python src/train.py -n 2 -g 1 -nr 0 --input_dir=./datasets --load=./parameters/gan_based.pth --checkpoint_dir=./results/exp17  --batch_size=16 --epoch=0 --num_epoch=500 --is_perceptual_oriented=False --scale_factor=4 --fp16 --distributed
 
 # Example: Resume GAN-based training.
 # python src/train.py -n 2 -g 1 -nr 0 --input_dir=./datasets --resume=./results/exp15/last.pth --checkpoint_dir=./results/exp15  --batch_size=16 --epoch=0 --num_epoch=200 --is_perceptual_oriented=False --scale_factor=4 --fp16 --distributed
