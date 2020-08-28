@@ -6,12 +6,12 @@ from torch.optim.adam import Adam
 from torchvision.utils import save_image
 import torch.multiprocessing as mp, torch.distributed as dist
 import apex
-from loss.loss import PerceptualLoss
-from metrics import PSNR
-from config.config import parse_args
-from model.ESRGAN import ESRGAN
-from model.Discriminator import Discriminator
-from dataloader.dataloader import get_loader
+from ESRGAN_pytorch.loss.loss import PerceptualLoss
+from ESRGAN_pytorch.metrics import PSNR
+from ESRGAN_pytorch.config.config import parse_args
+from ESRGAN_pytorch.model.ESRGAN import ESRGAN
+from ESRGAN_pytorch.model.Discriminator import Discriminator
+from ESRGAN_pytorch.dataloader.dataloader import get_loader
 
 
 class Trainer:
