@@ -1,4 +1,4 @@
-from model.block import *
+from ESRGAN_pytorch.model.block import *
 
 
 class ESRGAN(nn.Module):
