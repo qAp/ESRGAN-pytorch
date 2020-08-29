@@ -4,7 +4,7 @@ import torch
 
 class ResidualDenseBlock(nn.Module):
     def __init__(self, nf, gc=32, res_scale=0.2):
-        super(ResidualDenseBlock, self).__init__()
+        super().__init__()
         self.layer1 = nn.Sequential(nn.Conv2d(nf + 0 * gc, gc, 3, padding=1, bias=True), nn.LeakyReLU())
         self.layer2 = nn.Sequential(nn.Conv2d(nf + 1 * gc, gc, 3, padding=1, bias=True), nn.LeakyReLU())
         self.layer3 = nn.Sequential(nn.Conv2d(nf + 2 * gc, gc, 3, padding=1, bias=True), nn.LeakyReLU())
@@ -24,7 +24,7 @@ class ResidualDenseBlock(nn.Module):
 
 class ResidualInResidualDenseBlock(nn.Module):
     def __init__(self, nf, gc=32, res_scale=0.2):
-        super(ResidualInResidualDenseBlock, self).__init__()
+        super().__init__()
         self.layer1 = ResidualDenseBlock(nf, gc)
         self.layer2 = ResidualDenseBlock(nf, gc)
         self.layer3 = ResidualDenseBlock(nf, gc, )
