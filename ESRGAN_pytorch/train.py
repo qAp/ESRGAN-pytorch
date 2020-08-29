@@ -53,16 +53,15 @@ class Trainer:
         self.best_score = -9999.
         self.generator.train()
         self.discriminator.train()
-
+        
+        print(f"{'epoch':>7s}"  f"{'batch':>10s}" f"{'discr.':>10s}"
+              f"{'gener.':>10s}" f"{'adver.':>10s}" f"{'percp.':>10s}"
+              f"{'contn.':>10s}" f"{'PSNR':>10s}" f"")
+        
         for epoch in range(args.epoch, args.num_epoch):
             sample_dir_epoch = Path(args.checkpoint_dir)/'sample_dir'/str(epoch)
             sample_dir_epoch.mkdir(exist_ok=True, parents=True)
 
-            if epoch % 5 == 0:
-                print(f"{'epoch':>7s}"  f"{'batch':>7s}" f"{'discr.':>10s}"
-                      f"{'gener.':>10s}" f"{'adver.':>10s}" f"{'percp.':>10s}"
-                      f"{'contn.':>10s}" f"{'PSNR':>10s}" f"")
-                
             for step, image in enumerate(self.data_loader):
                 low_resolution = image['lr'].cuda()
                 high_resolution = image['hr'].cuda()
@@ -136,18 +135,20 @@ class Trainer:
                     self.lr_scheduler_discriminator.step()
                     self.unit_scheduler_step += 1
 
+                score = self.metric(fake_high_resolution.detach(),
+                                    high_resolution)
+                print(f'\r'
+                      f"{epoch:>3d}:{args.num_epoch:<3d}"
+                      f"{step:>5d}:{total_step:<4d}"
+                      f"{discriminator_loss.item():>10.4f}"
+                      f"{generator_loss.item():>10.4f}"
+                      f"{adversarial_loss.item()*self.adversarial_loss_factor:>10.4f}"
+                      f"{perceptual_loss.item()*self.perceptual_loss_factor:>10.4f}"
+                      f"{content_loss.item()*self.content_loss_factor:>10.4f}"
+                      f"{score.item():>10.4f}",
+                      end='')
+                
                 if step % 1000 == 0:
-                    score = self.metric(fake_high_resolution.detach(),
-                                        high_resolution)
-                    print(f"{epoch:>3d}:{args.num_epoch:<3d}"
-                          f"{step:>3d}:{total_step:<3d}"
-                          f"{discriminator_loss.item():>10.4f}"
-                          f"{generator_loss.item():>10.4f}"
-                          f"{adversarial_loss.item()*self.adversarial_loss_factor:>10.4f}"
-                          f"{perceptual_loss.item()*self.perceptual_loss_factor:>10.4f}"
-                          f"{content_loss.item()*self.content_loss_factor:>10.4f}"
-                          f"{score.item():>10.4f}"
-                          f"")
                     if step % 5000 == 0:
                         result = torch.cat((high_resolution, fake_high_resolution), 2)
                         save_image(result, sample_dir_epoch/f"SR_{step}.png")
