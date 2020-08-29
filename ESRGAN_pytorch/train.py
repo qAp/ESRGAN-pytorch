@@ -137,7 +137,6 @@ class Trainer:
 
                 score = self.metric(fake_high_resolution.detach(),
                                     high_resolution)
-                print(step)
                 print(f'\r'
                       f"{epoch:>3d}:{args.num_epoch:<3d}"
                       f"{step:>5d}:{total_step:<4d}"
