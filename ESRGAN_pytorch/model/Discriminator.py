@@ -4,7 +4,7 @@ import torch
 
 class Discriminator(nn.Module):
     def __init__(self, num_conv_block=4):
-        super(Discriminator, self).__init__()
+        super().__init__()
 
         block = []
 
