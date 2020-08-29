@@ -4,7 +4,7 @@ from torchvision.models.vgg import vgg19
 
 class PerceptualLoss(nn.Module):
     def __init__(self):
-        super(PerceptualLoss, self).__init__()
+        super().__init__()
 
         vgg = vgg19(pretrained=True)
         loss_network = nn.Sequential(*list(vgg.features)[:35]).eval()
