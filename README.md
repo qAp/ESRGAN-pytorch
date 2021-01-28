@@ -40,5 +40,5 @@
    which indicates that node B has node rank of 1 and that it also has only 1 GPU.  The total number of nodes stays at 2.
 
 ### Mixed precision training
-    To use mixed precision in training, supply the `--fp16` argument to `train.py`.
+   To use mixed precision in training, supply the `--fp16` argument to `train.py`.
 
