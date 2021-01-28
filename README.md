@@ -16,7 +16,7 @@
 ## Usage
 
 ### General usage
-   See the original repo's README.md for instructions on general usage of ESRGAN-pytorch.
+   See the original repo's [README.md](https://github.com/wonbeomjang/ESRGAN-pytorch/blob/master/README.md) for instructions on general usage of ESRGAN-pytorch.
 
 ### Distributed training
    To run distributed training, suppose you have two nodes, A and B, each with one GPU, and that you have selected node A as the master node.  Then,on all nodes, in `train.main`, edit the following 2 lines:
