@@ -1,58 +1,44 @@
 # ESRGAN-pytorch
 
-This repository implements a deep-running model for super resolution.
- Super resolution allows you to pass low resolution images to CNN and restore them to high resolution. 
- We refer to the following article.  
- [ESRGAN: Enhanced Super-Resolution Generative Adversarial Networks](https://arxiv.org/abs/1809.00219)  
- 
- ## architecture
- [Overall Architecture]
- ![ESRGAN architecture](./image/architecture.PNG)  
- [Basic block]  
- ![BasicBlock](./image/basicBlock.PNG)
- 
- ### Test Code
- ```bash
-python test.py --lr_dir LR_DIR --sr_dir SR_DIR
-```
- 
- ## Prepare dataset
- ### Use Flicker2K and DIV2K
-```bash
-cd datasets
-python prepare_datasets.py
-cd ..
-```
-### custom dataset
-Make dataset like this; size of hr is 128x128 ans lr is 32x32
-```
-datasets/
-    hr/
-        0001.png
-        sdf.png
-        0002.png
-        0003.png
-        0004.png
-        ...
-    lr/
-        0001.png
-        sdf.png
-        0002.png
-        0003.png
-        0004.png
-        ...
-```
+  > ESRGAN-pytorch + distributed training
 
-## how to train
-run main file
-```bash
-python main.py --is_perceptual_oriented True --num_epoch=10
-python main.py --is_perceptual_oriented False --epoch=10
-```
+  This fork of [ESRGAN-pytorch](https://github.com/wonbeomjang/ESRGAN-pytorch.git) makes use of `apex` to enable optional training across multiple nodes with multiple GPUs and mixed precision.
 
-## Sample
-we are in training on this code and train is not complete yet.
-this is intermediate result.
+## How to install
+   ```
+   git clone https://github.com/qAp/ESRGAN-pytorch.git
+   cd ESRGAN-pytorch
+   git install --editable .
+   ```
 
-<img src="image/lr.png" width="200">
-<img src="image/hr.png" width="800">
+   See [here](https://github.com/qAp/omdena_engie/blob/master/omdena_engie/06_ESRGAN-pytorch_training_colab.ipynb) for an example of how to install `apex` and get this package to work in Colab.  Note that on Colab there're no multiple nodes nor GPUs though.
+
+## Usage
+
+### General usage
+   See the original repo's README.md for instructions on general usage of ESRGAN-pytorch.
+
+### Distributed training
+   To run distributed training, suppose you have two nodes, A and B, each with one GPU, and that you have selected node A as the master node.  Then,on all nodes, in `train.main`, edit the following 2 lines:
+
+   ```python
+   os.environ['MASTER_ADDR'] = '172.31.29.213'
+   os.environ['MASTER_PORT'] = '8889'
+   ```
+   where `MASTER_ADDR` is the IP address of node A, and `MASTER_PORT` is a port that you have selected for communicating with other nodes.
+
+   To start the training, execute the `train.py` script.  On node A, the master node, in addition to the usual arguments for training, supply the following:
+   ```
+   python train.py -n 2 -g 1 -nr 0 --distributed
+   ```
+   This says that there are a total of 2 nodes, the current node, node A, has node rank 0, which indicates that it's the master node.  `-g 1` indicates that there is only 1 GPU on this node.
+
+   Once you have executed `train.py` on node A, go onto node B and execute the same script with:
+   ```
+   python train.py -n 2 -g 1 -nr 1 --distributed
+   ```
+   which indicates that node B has node rank of 1 and that it also has only 1 GPU.  The total number of nodes stays at 2.
+
+### Mixed precision training
+    To use mixed precision in training, supply the `--fp16` argument to `train.py`.
+
